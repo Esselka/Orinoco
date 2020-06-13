@@ -7,8 +7,8 @@
 Vous avez besoin de node.js et de npm. Vous devriez probablement l'installer globalement. [Installer Node](https://nodejs.org/)
 
 ```sh
-git clone https://github.com/Esselka/P5.git
-cd P5
+git clone https://github.com/Esselka/Orinoco.git
+cd Orinoco
 npm install
 npm start
 ```
