@@ -25,12 +25,15 @@ var formIsNotOnPage = true;
             apiDatas = data;
             switch (window.location.pathname) {
                 case '/':
+                    getArticlesCounter();
                     getAllTeddies();
                     break;
                 case '/produit.html':
+                    getArticlesCounter();
                     showProductInfos();
                     break;
                 case '/panier.html':
+                    getArticlesCounter();
                     validateFormAndPostToAPI();
                     getCartDatas();
                     break;
@@ -103,13 +106,8 @@ function showProductInfos() {
 
         price.innerHTML += `
         <p class="card-text text-center font-weight-bold mx-3"><u>Prix</u> : ${currentTeddy.price/100} €</p>
-        <select class="col-3 col-md-2" id="count">
-            <option value="1" selected>1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-        </select>`;
+        <label for="count">Nombre d'articles (1-30):</label>
+        <input type="number" id="count" name="count" value="1" min="1" max="30">`;
 
         for (let i = 0; i < currentTeddy.colors.length; i++) {
             colors.innerHTML += `<option value="${currentTeddy.colors[i]}">${currentTeddy.colors[i]}</option>`;
@@ -135,6 +133,12 @@ function addToCart() {
     let confirmAddedToCart = document.querySelector('#addedToCart');
     let chosenColor = document.querySelector('#colors').value;
     let chosenNumOfArticles = document.querySelector('#count').value;
+
+    // Si l'utilisateur est en dehors de la range des articles, 
+    // définit 'chosenNumOfArticles' sur la valeur max ou min de la range
+    if (chosenNumOfArticles > 30) chosenNumOfArticles = 30;
+
+    if (chosenNumOfArticles <= 0) chosenNumOfArticles = 0;
 
     // Stockage des données de l'article en cours dans un objet
     let myArticle = {
@@ -179,6 +183,8 @@ function addToCart() {
             }
         }
     }
+    // Met à jour le nombre d'articles dans l'info-bulle du Panier dans le header
+    getArticlesCounter();
 }
 
 /**
@@ -328,7 +334,7 @@ function validateFormAndPostToAPI() {
         let city = document.getElementById('city');
         let email = document.getElementById('email');
 
-        let letters = /^[A-Za-z]+$/;
+        let letters = /^[A-Za-z \-]+$/;
         if (!(firstName.value.match(letters) && lastName.value.match(letters) && city.value.match(letters))) {
             // La bordure devient rouge pour les input où l'utilisateur n'a pas utilisé que des lettres
             firstName.classList.remove("border-danger");
@@ -347,7 +353,7 @@ function validateFormAndPostToAPI() {
             // Affichage d'une alerte expliquant comment remplir le formulaire correctement
             badFormat.innerHTML = `
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <strong>Oups, une petite erreur!</strong> Les champs 'Prénom', 'Nom' et 'Ville' n'accèptent que les lettres.<br>
+                <strong>Oups, une petite erreur!</strong> Les champs 'Prénom', 'Nom' et 'Ville' n'accèptent que les lettres et le tiret.<br>
                 Veuillez effectuer les modifications et appuyer de nouveau sur le bouton <strong>Acheter</strong>.
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -486,6 +492,7 @@ function removeArticle(index) {
     }
 
     getCartDatas();
+    getArticlesCounter();
 }
 
 /**
@@ -496,7 +503,31 @@ function updateQtyValue(index) {
     let qtySelector = document.querySelector(`#qtySelector-${index}`);
     let cartArticles = JSON.parse(localStorage.getItem(ARTICLES));
 
-    cartArticles[index].numberOfArticles = qtySelector.value;
+    cartArticles[index].numberOfArticles = Number(qtySelector.value);
     localStorage.setItem(ARTICLES, JSON.stringify(cartArticles));
     getCartDatas();
+    getArticlesCounter();
+}
+
+/**
+ * Affiche une info-bulle dans le header indiquant le nombre actuel d'articles dans le panier.
+ * N'affiche pas l'info-bulle si le panier est vide.
+ */
+function getArticlesCounter() {
+    let articles = JSON.parse(localStorage.getItem(ARTICLES))
+    let counter = document.querySelector('#cartCounter');
+    let totalCurrentArticles = 0;
+
+    if (articles != null) {
+        articles.forEach(element => {
+            totalCurrentArticles += element.numberOfArticles;
+        });
+    }
+
+    if (totalCurrentArticles > 0) {
+        counter.hidden = false;
+        counter.innerHTML = totalCurrentArticles;
+    } else {
+        counter.hidden = true;
+    }
 }
