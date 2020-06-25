@@ -14,7 +14,11 @@ npm start
 ```
 Site disponible à cette adresse : [http://localhost:3000/](http://localhost:3000/)
 
-# @TODO !
+## Tests
+
+[Plan de tests Orinoco.pdf](https://github.com/Esselka/Orinoco/tree/master/__tests__/plan_de_tests_orinoco.pdf)
+
+## @TODO !
 
  - Faire les tests unitaires, Jest ?
 

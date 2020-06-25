@@ -106,8 +106,8 @@ function showProductInfos() {
 
         price.innerHTML += `
         <p class="card-text text-center font-weight-bold mx-3"><u>Prix</u> : ${currentTeddy.price/100} €</p>
-        <label for="count">Nombre d'articles (1-30):</label>
-        <input type="number" id="count" name="count" value="1" min="1" max="30">`;
+        <label for="count">Nombre d'articles (minimum 1):</label>
+        <input type="number" id="count" name="count" value="1" min="1">`;
 
         for (let i = 0; i < currentTeddy.colors.length; i++) {
             colors.innerHTML += `<option value="${currentTeddy.colors[i]}">${currentTeddy.colors[i]}</option>`;
@@ -134,11 +134,9 @@ function addToCart() {
     let chosenColor = document.querySelector('#colors').value;
     let chosenNumOfArticles = document.querySelector('#count').value;
 
-    // Si l'utilisateur est en dehors de la range des articles, 
-    // définit 'chosenNumOfArticles' sur la valeur max ou min de la range
-    if (chosenNumOfArticles > 30) chosenNumOfArticles = 30;
-
-    if (chosenNumOfArticles <= 0) chosenNumOfArticles = 0;
+    // Si l'utilisateur rentre manuellement un nombre d'article 
+    // inférieur ou égal à zéro dans le input -> définit 'chosenNumOfArticles' à 1
+    if (chosenNumOfArticles <= 0) chosenNumOfArticles = 1;
 
     // Stockage des données de l'article en cours dans un objet
     let myArticle = {
@@ -229,19 +227,11 @@ function getCartDatas() {
                             <p class="mb-2 text-justify">${data.description}</p>
                             <div class="d-flex justify-content-between">
                                 <p class="mb-0 small">Couleur: ${element.color}</p>
-                                <select id="qtySelector-${index}" class="small" onchange="updateQtyValue(${index})">
-                                    <option selected>Quantité (max 10)</option>
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                    <option value="4">4</option>
-                                    <option value="5">5</option>
-                                    <option value="6">6</option>
-                                    <option value="7">7</option>
-                                    <option value="8">8</option>
-                                    <option value="9">9</option>
-                                    <option value="10">10</option>
-                                </select>
+                                <div class="d-flex flex-column">
+                                    <label for="quantity" class="mx-auto"><small>Quantité (minimum 1):</small></label>
+                                    <input type="number" class="small" id="quantity" name="quantity" value="1" min="1">
+                                    <button onclick="updateQtyValue(${index})" class="btn btn-primary btn-sm mx-auto mt-2">Mettre à jour</button>
+                                </div> 
                             </div>
                             <p class="mb-2 small ">Quantité: ${element.numberOfArticles}</p>
                             <button onclick="removeArticle(${index})" class="btn btn-secondary btn-sm">Supprimer</button>
@@ -334,10 +324,19 @@ function validateFormAndPostToAPI() {
         let city = document.getElementById('city');
         let email = document.getElementById('email');
 
-        let letters = /^[A-zÀ-ú \-]+$/;
-        let lettersAndNumbers = /^[A-zÀ-ú0-9 \-]+$/;
-        if (!(firstName.value.match(letters) && lastName.value.match(letters) && city.value.match(letters) && address.value.match(lettersAndNumbers))) {
-            // La bordure devient rouge pour les input où l'utilisateur n'a pas utilisé que des lettres
+        let letters = /^[A-zÀ-ú][A-zÀ-ú -]+$/;
+        let lettersAndNumbers = /^[A-zÀ-ú0-9][A-zÀ-ú0-9 -]+$/;
+
+        /**
+         * Vérifie qu'il n'y a pas de caractères non autorisés dans les champs remplis par l'utilisateur,
+         * et que l'utilisateur n'a pas rentré seulement le caractère espace dans l'un des champs.
+         */
+        if (!(firstName.value.match(letters) &&
+                lastName.value.match(letters) &&
+                city.value.match(letters) &&
+                address.value.match(lettersAndNumbers)
+            )) {
+            // La bordure devient rouge pour les input où l'utilisateur n'a respecté les conditions.
             firstName.classList.remove("border-danger");
             lastName.classList.remove("border-danger");
             city.classList.remove("border-danger");
@@ -358,8 +357,9 @@ function validateFormAndPostToAPI() {
             // Affichage d'une alerte expliquant comment remplir le formulaire correctement
             badFormat.innerHTML = `
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <strong>Oups, une petite erreur!</strong><br>Les champs 'Prénom', 'Nom' et 'Ville' n'accèptent que les lettres et le tiret.<br>
-                Le champ 'Adresse' n'accèpte que les lettres, les chiffres et le tiret (attention à ne pas mettre de virgule).<br>
+                <strong>Oups, une petite erreur!</strong><br>- Les champs 'Prénom', 'Nom' et 'Ville' n'accèptent que les lettres et le tiret.<br>
+                - Le champ 'Adresse' n'accèpte que les lettres, les chiffres et le tiret (attention à ne pas mettre de virgule).<br>
+                - <u>Vérifiez qu'il n'y ait pas d'espace avant vos réponses dans chaque champ</u>.<br><br>
                 Veuillez effectuer les modifications et appuyer de nouveau sur le bouton <strong>Acheter</strong>.
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -506,7 +506,9 @@ function removeArticle(index) {
  * @param {numer} index - index de l'élement où la quantité doit être modifié
  */
 function updateQtyValue(index) {
-    let qtySelector = document.querySelector(`#qtySelector-${index}`);
+    let qtySelector = document.querySelector(`#quantity`);
+    if (qtySelector.value < 1) qtySelector.value = 1;
+
     let cartArticles = JSON.parse(localStorage.getItem(ARTICLES));
 
     cartArticles[index].numberOfArticles = Number(qtySelector.value);
