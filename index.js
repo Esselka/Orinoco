@@ -334,12 +334,14 @@ function validateFormAndPostToAPI() {
         let city = document.getElementById('city');
         let email = document.getElementById('email');
 
-        let letters = /^[A-Za-z \-]+$/;
-        if (!(firstName.value.match(letters) && lastName.value.match(letters) && city.value.match(letters))) {
+        let letters = /^[A-zÀ-ú \-]+$/;
+        let lettersAndNumbers = /^[A-zÀ-ú0-9 \-]+$/;
+        if (!(firstName.value.match(letters) && lastName.value.match(letters) && city.value.match(letters) && address.value.match(lettersAndNumbers))) {
             // La bordure devient rouge pour les input où l'utilisateur n'a pas utilisé que des lettres
             firstName.classList.remove("border-danger");
             lastName.classList.remove("border-danger");
             city.classList.remove("border-danger");
+            address.classList.remove("border-danger");
 
             if (!firstName.value.match(letters)) {
                 firstName.classList.add("border-danger");
@@ -350,10 +352,14 @@ function validateFormAndPostToAPI() {
             if (!city.value.match(letters)) {
                 city.classList.add("border-danger");
             }
+            if (!address.value.match(lettersAndNumbers)) {
+                address.classList.add("border-danger");
+            }
             // Affichage d'une alerte expliquant comment remplir le formulaire correctement
             badFormat.innerHTML = `
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <strong>Oups, une petite erreur!</strong> Les champs 'Prénom', 'Nom' et 'Ville' n'accèptent que les lettres et le tiret.<br>
+                <strong>Oups, une petite erreur!</strong><br>Les champs 'Prénom', 'Nom' et 'Ville' n'accèptent que les lettres et le tiret.<br>
+                Le champ 'Adresse' n'accèpte que les lettres, les chiffres et le tiret (attention à ne pas mettre de virgule).<br>
                 Veuillez effectuer les modifications et appuyer de nouveau sur le bouton <strong>Acheter</strong>.
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
